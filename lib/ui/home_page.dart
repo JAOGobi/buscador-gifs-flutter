@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:buscador_gifs/ui/gif_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:share/share.dart';
+import 'package:transparent_image/transparent_image.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,7 +21,7 @@ class _HomePageState extends State<HomePage> {
   Future<Map> _getGifs() async {
     http.Response response;
 
-    if (_search == null) {
+    if (_search == null || _search!.isEmpty) {
       response = await http.get(Uri.parse(
           "https://api.giphy.com/v1/gifs/trending?api_key=9sBsr7hYwl4pG5H4IJU8hAQQRD6V98v8&limit=20&offset=0&rating=g&bundle=messaging_non_clips"));
     } else {
@@ -52,13 +54,13 @@ class _HomePageState extends State<HomePage> {
       body: Column(
         children: <Widget>[
           Padding(
-            padding: EdgeInsets.all(10.0),
+            padding: const EdgeInsets.all(10.0),
             child: TextField(
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                   labelText: "Pesquise Aqui!",
                   labelStyle: TextStyle(color: Colors.white),
                   border: OutlineInputBorder()),
-              style: TextStyle(color: Colors.white, fontSize: 18.0),
+              style: const TextStyle(color: Colors.white, fontSize: 18.0),
               textAlign: TextAlign.center,
               onSubmitted: (text) {
                 setState(() {
@@ -115,8 +117,10 @@ class _HomePageState extends State<HomePage> {
       itemBuilder: (context, index) {
         if (_search == null || index < snapshot.data["data"].length) {
           return GestureDetector(
-            child: Image.network(
-              snapshot.data["data"][index]["images"]["fixed_height"]["url"],
+            child: FadeInImage.memoryNetwork(
+              placeholder: kTransparentImage,
+              image: snapshot.data["data"][index]["images"]["fixed_height"]
+                  ["url"],
               height: 300.0,
               fit: BoxFit.cover,
             ),
@@ -127,6 +131,10 @@ class _HomePageState extends State<HomePage> {
                   builder: (context) => GifPage(snapshot.data["data"][index]),
                 ),
               );
+            },
+            onLongPress: () {
+              Share.share(
+                  snapshot.data["data"][index]["images"]["fixed_height"]);
             },
           );
         } else {
